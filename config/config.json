@@ -1,3 +1,4 @@
 {
-    "TestCall": "0xC16E3F93e0c787C848fF5931D915EaA4157BB981"
+    "contractAddress": "0xC16E3F93e0c787C848fF5931D915EaA4157BB981",
+    "rpcUrl": "https://sepolia.base.org"
 }

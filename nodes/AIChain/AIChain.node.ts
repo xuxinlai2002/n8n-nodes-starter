@@ -4,8 +4,10 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeConnectionType,
-	IExecuteFunctions
+	IExecuteFunctions,
+	INodeExecutionData,
 } from 'n8n-workflow';
+import * as fs from 'fs';
 
 
 export class AIChain implements INodeType {
@@ -41,120 +43,80 @@ export class AIChain implements INodeType {
         },
 
 		properties: [
-            {
-                displayName: 'Resource',
-                name: 'resource',
-                type: 'options',
-                options: [
-                    {
-                        name: 'Contact',
-                        value: 'contact',
-                    },
-                ],
-                default: 'contact',
-                noDataExpression: true,
-                required: true,
-                description: 'Create a new contact',
-            },
-
-            {
-                displayName: 'Operation',
-                name: 'operation',
-                type: 'options',
-                displayOptions: {
-                    show: {
-                        resource: [
-                            'contact',
-                        ],
-                    },
-                },
-                options: [
-                    {
-                        name: 'Create',
-                        value: 'create',
-                        description: 'Create a contact',
-                        action: 'Create a contact',
-                    },
-                ],
-                default: 'create',
-                noDataExpression: true,
-            },
-            {
-                displayName: 'Email',
-                name: 'email',
-                type: 'string',
-                required: true,
-                displayOptions: {
-                    show: {
-                        operation: [
-                            'create',
-                        ],
-                        resource: [
-                            'contact',
-                        ],
-                    },
-                },
-                default:'',
-                placeholder: 'name@email.com',
-                description:'Primary email for the contact',
-            },
-
-            {
-                displayName: 'Additional Fields',
-                name: 'additionalFields',
-                type: 'collection',
-                placeholder: 'Add Field',
-                default: {},
-                displayOptions: {
-                    show: {
-                        resource: [
-                            'contact',
-                        ],
-                        operation: [
-                            'create',
-                        ],
-                    },
-                },
-                options: [
-                    {
-                        displayName: 'First Name',
-                        name: 'firstName',
-                        type: 'string',
-                        default: '',
-                    },
-                    {
-                        displayName: 'Last Name',
-                        name: 'lastName',
-                        type: 'string',
-                        default: '',
-                    },
-                ],
-            },
+			{
+				displayName: 'Config Path',
+				name: 'configPath',
+				type: 'string',
+				required: true,
+				default: '',
+				description: 'Path to config.json file',
+			},
+			{
+				displayName: 'ABI Path',
+				name: 'abiPath',
+				type: 'string',
+				required: true,
+				default: '',
+				description: 'Path to abi.json file',
+			},
+			{
+				displayName: 'Private Key',
+				name: 'privateKey',
+				type: 'string',
+				required: true,
+				default: '',
+				description: 'Private key for signing the transaction',
+			},
+			{
+				displayName: 'Key',
+				name: 'key',
+				type: 'string',
+				required: true,
+				default: '',
+				description: 'Key for the writeData function',
+			},
+			{
+				displayName: 'Value',
+				name: 'value',
+				type: 'string',
+				required: true,
+				default: '',
+				description: 'Value for the writeData function',
+			},
 		]
 	};
-	// 新增 execute 方法，所有请求都默认发起 eth_blockNumber 的 POST 请求
-	async execute(this: IExecuteFunctions) {
-		const response = await this.helpers.httpRequest({
-			method: 'POST',
-			url: 'https://rpc.agtchain.net',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: {
-				jsonrpc: '2.0',
-				method: 'eth_blockNumber',
-				params: [],
-				id: 1,
-			},
-			json: true,
-		});
-		let blockHeight = 'N/A';
-		if (response && response.result) {
-			blockHeight = parseInt(response.result, 16).toString();
-		}
-		// 返回二维数组，且每个元素为 { json: { blockHeight } }
+	// 新增 execute 方法，读取配置文件并调用合约函数
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		// 读取 config/config.json 获取合约地址和 RPC
+		const configPath = this.getNodeParameter('configPath', 0) as string;
+		const abiPath = this.getNodeParameter('abiPath', 0) as string;
+
+		// 使用 fs 模块读取文件
+		const configContent = fs.readFileSync(configPath, 'utf8');
+		const abiContent = fs.readFileSync(abiPath, 'utf8');
+
+		const config = JSON.parse(configContent);
+		const abi = JSON.parse(abiContent);
+
+		const contractAddress = config.contractAddress;
+		const rpcUrl = config.rpcUrl;
+
+		// 获取用户输入的参数
+		const privateKey = this.getNodeParameter('privateKey', 0) as string;
+		const key = this.getNodeParameter('key', 0) as string;
+		const value = this.getNodeParameter('value', 0) as string;
+
+		// 调用合约函数 writeData
+		const ethers = require('ethers');
+		const provider = new ethers.JsonRpcProvider(rpcUrl);
+		const wallet = new ethers.Wallet(privateKey, provider);
+		const contract = new ethers.Contract(contractAddress, abi, wallet);
+		const tx = await contract.writeData(key, value);
+		const receipt = await tx.wait();
+
+		// 返回交易结果
 		return [
-			[{ json: { blockHeight: blockHeight } }]
+			[{ json: { transactionHash: receipt.hash } }]
 		];
 	}
 }
