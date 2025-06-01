@@ -36,7 +36,8 @@
     ],
     "nodes": [
       "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/HttpBin/HttpBin.node.js",
+      "dist/nodes/ContractDeployer/ContractDeployer.node.js"
     ]
   },
   "devDependencies": {
@@ -51,6 +52,8 @@
     "n8n-workflow": "*"
   },
   "dependencies": {
-    "ethers": "^6.14.1"
+    "ethers": "^6.14.1",
+    "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts-upgradeable": "^5.0.1"
   }
 }
