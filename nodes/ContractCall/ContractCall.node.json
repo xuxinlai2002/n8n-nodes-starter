@@ -1,0 +1,47 @@
+{
+    "node": {
+        "name": "Contract Call",
+        "displayName": "Contract Call",
+        "description": "调用智能合约的节点",
+        "version": 1,
+        "defaults": {
+            "name": "Contract Call"
+        },
+        "inputs": [
+            "main"
+        ],
+        "outputs": [
+            "main"
+        ],
+        "properties": [
+            {
+                "displayName": "Prompt",
+                "name": "prompt",
+                "type": "string",
+                "default": "",
+                "description": "输入关键字搜索合约"
+            },
+            {
+                "displayName": "Contract Name",
+                "name": "contractName",
+                "type": "string",
+                "default": "",
+                "description": "选择要调用的合约"
+            },
+            {
+                "displayName": "Function Name",
+                "name": "functionName",
+                "type": "string",
+                "default": "",
+                "description": "选择要调用的函数"
+            },
+            {
+                "displayName": "Parameters",
+                "name": "parameters",
+                "type": "string",
+                "default": "{}",
+                "description": "输入函数参数，JSON格式"
+            }
+        ]
+    }
+} 
