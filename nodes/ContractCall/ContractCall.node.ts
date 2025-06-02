@@ -12,25 +12,29 @@ export default class ContractCall implements INodeType {
         outputs: ['main'],
         properties: [
             {
-                displayName: 'Test Option',
+                displayName: 'Test Option Name or ID',
                 name: 'testOption',
                 type: 'options',
                 typeOptions: { loadOptionsMethod: 'loadOptionsTest' },
                 default: '',
-                description: 'Test dropdown',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code-examples/expressions/">expression</a>',
             },
         ],
     };
 
+    methods = {
+        loadOptions: {
+            async loadOptionsTest(this: ILoadOptionsFunctions) {
+                return [
+                    { name: 'A', value: 'a' },
+                    { name: 'B', value: 'b' },
+                ];
+            }
+        }
+    };
+
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
         return [[{ json: { ok: true } }]];
-    }
-
-    static async loadOptionsTest(this: ILoadOptionsFunctions) {
-        return [
-            { name: 'A', value: 'a' },
-            { name: 'B', value: 'b' },
-        ];
     }
 }
 // 兼容 n8n loader
